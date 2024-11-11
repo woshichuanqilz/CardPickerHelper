@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32804.467
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyHsHelper", "MyHsHelper.csproj", "{2CF7C973-74F9-4A24-A472-9AE0B5D4C9FC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2CF7C973-74F9-4A24-A472-9AE0B5D4C9FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CF7C973-74F9-4A24-A472-9AE0B5D4C9FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CF7C973-74F9-4A24-A472-9AE0B5D4C9FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CF7C973-74F9-4A24-A472-9AE0B5D4C9FC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B350BE2B-C807-491F-B555-5798F0F04F04}
+	EndGlobalSection
+EndGlobal
