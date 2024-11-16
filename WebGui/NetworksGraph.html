@@ -17,7 +17,13 @@
     </style>
   </head>
   <body>
-    <svg width="800" height="600"></svg>
+    <svg width="800" height="600">
+      <defs>
+        <clipPath id="circleClip">
+          <circle r="20" cx="30" cy="30"></circle>
+        </clipPath>
+      </defs>
+    </svg>
     <script>
       const width = 800;
       const height = 600;
@@ -91,8 +97,9 @@
       node
         .append("image")
         .attr("xlink:href", (d) => d.img)
-        .attr("width", 30)
-        .attr("height", 30);
+        .attr("width", 60)
+        .attr("height", 60)
+        .attr("clip-path", "url(#circleClip)");
 
       node.append("title").text((d) => d.id);
 
@@ -107,7 +114,7 @@
           .attr("x2", (d) => d.target.x)
           .attr("y2", (d) => d.target.y);
 
-        node.attr("transform", (d) => `translate(${d.x - 15},${d.y - 15})`);
+        node.attr("transform", (d) => `translate(${d.x - 30},${d.y - 30})`);
       }
 
       function dragstarted(event, d) {
