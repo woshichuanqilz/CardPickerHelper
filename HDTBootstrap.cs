@@ -17,6 +17,7 @@ using Hearthstone_Deck_Tracker.Enums;
 using Hearthstone_Deck_Tracker.Hearthstone;
 using Hearthstone_Deck_Tracker.Hearthstone.Entities;
 using Card = Hearthstone_Deck_Tracker.Hearthstone.Card;
+using HearthDb.Enums;
 
 namespace MyHsHelper
 {
@@ -101,7 +102,7 @@ namespace MyHsHelper
             // Card in Bob
             var minions_in_bob = new List<Entity>();
             var bgs_in_bob = new List<Entity>();
-            if (Core.Game.Opponent.Hero?.CardId.Contains("TB_BaconShopBob") ?? false)
+            if (Core.Game.Opponent.Hero?.CardId?.Contains("TB_BaconShopBob") ?? false)
             {
                 var entities = Core.Game.Entities.Values
                     .Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay && x.IsControlledBy(Core.Game.Opponent.Id))
@@ -112,11 +113,14 @@ namespace MyHsHelper
                 bgs_in_bob = entities[false].ToList();
             }
 
+            List<Race> l = BattlegroundsUtils.GetAvailableRaces(Core.Game.CurrentGameStats?.GameId)?.ToList();
+
             // Card on my board
             var cardsOnMyBoard = Core.Game.Entities.Values.Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay && x.IsControlledBy(Core.Game.Player.Id)).Select(x => x.Clone()).Select(entity => entity.Clone()).ToList();
 
             // Card in hand
             var cardsInHand = Core.Game.Entities.Values.Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay && x.IsControlledBy(Core.Game.Player.Id)).Select(x => x.Clone()).ToList();
+            var cardsInHand2 = Core.Game.Entities.Values.Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInZone(Zone.PLAY) && x.IsControlledBy(Core.Game.Player.Id)).Select(x => x.Clone()).ToList();
 
             // My Trinkets
             var myTrinkets = Core.Game.Player.Trinkets.Where(trinket => trinket.CardId != null).ToList().ToList();

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D3 力导向图示例</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+      .link {
+        stroke: #999;
+        stroke-opacity: 0.6;
+      }
+      .node {
+        stroke: #fff;
+        stroke-width: 1.5px;
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="800" height="600"></svg>
+    <script>
+      const width = 800;
+      const height = 600;
+
+      const svg = d3.select("svg");
+
+      const simulation = d3
+        .forceSimulation()
+        .force(
+          "link",
+          d3
+            .forceLink()
+            .id((d) => d.id)
+            .distance(100)
+        )
+        .force("charge", d3.forceManyBody().strength(-300))
+        .force("center", d3.forceCenter(width / 2, height / 2));
+
+      const graph = {
+        nodes: [
+          {
+            id: "A",
+            img: "https://static.zerotoheroes.com/hearthstone/cardart/256x/BG26_963.jpg",
+          },
+          {
+            id: "B",
+            img: "https://static.zerotoheroes.com/hearthstone/cardart/256x/BG26_531.jpg",
+          },
+          {
+            id: "C",
+            img: "https://static.zerotoheroes.com/hearthstone/cardart/256x/BG26_535.jpg",
+          },
+          {
+            id: "D",
+            img: "https://static.zerotoheroes.com/hearthstone/cardart/256x/BG26_360.jpg",
+          },
+        ],
+        links: [
+          { source: "A", target: "B" },
+          { source: "A", target: "C" },
+          { source: "B", target: "D" },
+          { source: "C", target: "D" },
+        ],
+      };
+
+      const link = svg
+        .append("g")
+        .attr("class", "links")
+        .selectAll("line")
+        .data(graph.links)
+        .enter()
+        .append("line")
+        .attr("class", "link");
+
+      const node = svg
+        .append("g")
+        .attr("class", "nodes")
+        .selectAll("g")
+        .data(graph.nodes)
+        .enter()
+        .append("g")
+        .attr("class", "node")
+        .call(
+          d3
+            .drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended)
+        );
+
+      node
+        .append("image")
+        .attr("xlink:href", (d) => d.img)
+        .attr("width", 30)
+        .attr("height", 30);
+
+      node.append("title").text((d) => d.id);
+
+      simulation.nodes(graph.nodes).on("tick", ticked);
+
+      simulation.force("link").links(graph.links);
+
+      function ticked() {
+        link
+          .attr("x1", (d) => d.source.x)
+          .attr("y1", (d) => d.source.y)
+          .attr("x2", (d) => d.target.x)
+          .attr("y2", (d) => d.target.y);
+
+        node.attr("transform", (d) => `translate(${d.x - 15},${d.y - 15})`);
+      }
+
+      function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      }
+
+      function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+      }
+
+      function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      }
+    </script>
+  </body>
+</html>
