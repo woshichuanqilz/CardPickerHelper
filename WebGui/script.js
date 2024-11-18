@@ -117,13 +117,20 @@ node
     graph.links.forEach((link) => {
       if (link.source.id === d.id || link.target.id === d.id) {
         // 改变连线的颜色和宽度
-        d3.select("line") // 假设您使用 <line> 元素来表示连线
+        const filteredLines = d3
+          .selectAll("line") // 假设您使用 <line> 元素来表示连线
           .filter(
             (l) =>
               (l.source.id === link.source.id &&
                 l.target.id === link.target.id) ||
               (l.source.id === link.target.id && l.target.id === link.source.id)
-          )
+          );
+
+        // 输出过滤后的连线到控制台
+        console.log(filteredLines.nodes()); // 输出过滤后的连线节点
+
+        // 改变连线的颜色和宽度
+        filteredLines
           .transition()
           .duration(300)
           .style("stroke", "green") // 改变连线颜色为绿色
@@ -181,16 +188,18 @@ node
           .remove(); // 过渡结束后移除
 
         // 恢复连线的颜色和宽度
-        d3.select("line") // 假设您使用 <line> 元素来表示连线
+        const filteredLines = d3
+          .selectAll("line") // 假设您使用 <line> 元素来表示连线
           .filter(
             (l) =>
               (l.source.id === link.source.id &&
                 l.target.id === link.target.id) ||
               (l.source.id === link.target.id && l.target.id === link.source.id)
-          )
+          );
+        filteredLines
           .transition()
           .duration(300)
-          .style("stroke", "black") // 恢复连线颜色为黑色
+          .style("stroke", "lightgreen") // 恢复连线颜色为黑色
           .style("stroke-width", 2); // 恢复连线宽度
       }
     });
