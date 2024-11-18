@@ -89,6 +89,7 @@ const node = svg
 
 node
   .append("image")
+  .style("opacity", 0.8)
   .attr("xlink:href", (d) => d.img)
   .attr("width", IMAGE_WIDTH)
   .attr("height", IMAGE_HEIGHT)
@@ -98,6 +99,9 @@ node.append("title").text((d) => d.id);
 
 node
   .on("mouseover", function (event, d) {
+    // set image in current node opacity to 1
+    d3.select(this).select("image").style("opacity", 1);
+
     // 高亮当前节点
     const currentNode = d3
       .select(this)

@@ -1,6 +1,96 @@
-body {
-  background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjY2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2NjY2NjYyIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmZmZmZmYiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjY2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+:root {
+  --bg: #1a1e2d; /* 背景色 */
+  --green: #a5ea9b; /* 绿色 */
+  --pink: #ff61d8; /* 粉色 */
+  --blue: #569cfa; /* 蓝色 */
+  --orange: #ffcc81; /* 橙色 */
+  --cyan: #7ed1e2; /* 青色 */
 }
+
+body {
+  height: 100vh;
+  width: 100vw;
+  background: var(--bg); /* 使用背景色 */
+  display: flex;
+  place-content: center;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.container {
+  width: 80vw;
+  height: 80vh;
+
+  svg {
+    height: 100%;
+    width: 100%;
+    overflow: visible;
+  }
+}
+
+#bongo-cat {
+  fill: var(--bg); /* 使用背景色 */
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+
+  .laptop-cover,
+  .headphone .band {
+    fill: none; /* 保持透明 */
+  }
+
+  .paw,
+  .head {
+    stroke: var(--orange); /* 橙色 */
+  }
+
+  .laptop-keyboard {
+    stroke-width: 2;
+  }
+
+  .terminal-code {
+    stroke-width: 5;
+  }
+
+  .music .note,
+  .laptop-base,
+  .laptop-cover,
+  .paw .pads {
+    stroke: var(--pink); /* 粉色 */
+  }
+
+  .table line,
+  .headphone .band,
+  .headphone .speaker path:nth-child(3) {
+    stroke: var(--green); /* 绿色 */
+  }
+
+  .terminal-frame,
+  .laptop-keyboard,
+  .headphone .speaker path:nth-child(2) {
+    stroke: var(--blue); /* 蓝色 */
+  }
+
+  .terminal-code,
+  .headphone .speaker path:first-child {
+    stroke: var(--cyan); /* 青色 */
+  }
+}
+
+/* 添加暗模式的额外样式 */
+.container {
+  background: rgba(255, 255, 255, 0.1); /* 半透明背景 */
+  border-radius: 10px; /* 圆角 */
+  padding: 20px; /* 内边距 */
+}
+
+h1,
+h2,
+h3,
+p {
+  color: var(--white); /* 文字颜色 */
+}
+
 .link {
   stroke: #999;
   stroke-opacity: 0.6;
