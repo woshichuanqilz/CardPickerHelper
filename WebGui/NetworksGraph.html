@@ -6,6 +6,9 @@
     <title>D3 力导向图示例</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <style>
+      body {
+        background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjY2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2NjY2NjYyIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmZmZmZmYiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjY2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+      }
       .link {
         stroke: #999;
         stroke-opacity: 0.6;
@@ -76,7 +79,16 @@
         .data(graph.links)
         .enter()
         .append("line")
-        .attr("class", "link");
+        .attr("class", "link")
+        .style("stroke", (d) => {
+          return d.weight ? "blue" : "gray";
+        })
+        .style("stroke-width", (d) => {
+          return d.weight ? 2 : 1;
+        })
+        .style("stroke-dasharray", (d) => {
+          return d.type === "dashed" ? "5,5" : "none";
+        });
 
       const node = svg
         .append("g")
@@ -102,6 +114,62 @@
         .attr("clip-path", "url(#circleClip)");
 
       node.append("title").text((d) => d.id);
+
+      node
+        .on("mouseover", function (event, d) {
+          d3.select(this)
+            .append("circle")
+            .attr("class", "hover-circle")
+            .attr("r", 40)
+            .attr("fill", "none")
+            .attr("stroke", "orange")
+            .attr("stroke-width", 2)
+            .attr("transform", "translate(30, 30)");
+
+          graph.links.forEach((link) => {
+            if (link.source.id === d.id || link.target.id === d.id) {
+              d3.select(
+                node
+                  .nodes()
+                  .find(
+                    (n) =>
+                      n.__data__.id ===
+                      (link.source.id === d.id
+                        ? link.target.id
+                        : link.source.id)
+                  )
+              )
+                .append("circle")
+                .attr("class", "hover-circle")
+                .attr("r", 40)
+                .attr("fill", "none")
+                .attr("stroke", "orange")
+                .attr("stroke-width", 2)
+                .attr("transform", "translate(30, 30)");
+            }
+          });
+        })
+        .on("mouseout", function (event, d) {
+          d3.select(this).selectAll(".hover-circle").remove();
+
+          graph.links.forEach((link) => {
+            if (link.source.id === d.id || link.target.id === d.id) {
+              d3.select(
+                node
+                  .nodes()
+                  .find(
+                    (n) =>
+                      n.__data__.id ===
+                      (link.source.id === d.id
+                        ? link.target.id
+                        : link.source.id)
+                  )
+              )
+                .selectAll(".hover-circle")
+                .remove();
+            }
+          });
+        });
 
       simulation.nodes(graph.nodes).on("tick", ticked);
 
