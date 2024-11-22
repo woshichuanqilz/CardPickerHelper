@@ -70,7 +70,7 @@ namespace MyHsHelper
         public async Task DownloadAndParseJsonAsync()
         {
             const string url =
-                "https://hearthstone.wiki.gg/wiki/Special:CargoExport?tables=Card,%20CardTag,%20DerivedCard,%20CustomCard,%20CardTagBg&join%20on=Card.dbfId=CardTag.dbfId,%20CardTag.dbfId=DerivedCard.dbfId,%20DerivedCard.dbfId=CustomCard.dbfId,%20CustomCard.dbfId=CardTagBg.dbfId&fields=CONCAT(Card.dbfId)=dbfId,%20Card.id=id,%20CONCAT(Card.name)=name,%20DerivedCard.minionTypeStrings=Races,%20CardTag.keywords=keywords,%20CardTag.refs=refs,%20CardTag.stringTags=stringTags,%20CONCAT(CustomCard.mechanicTags__full)=wikiMechanics,%20CONCAT(CustomCard.refTags__full)=wikiTags,%20CONCAT(CustomCard.hiddenTags__full)=wikiHiddenTags&where=DerivedCard.setId=1453&limit=10000&format=json";
+                "https://hearthstone.wiki.gg/wiki/Special:CargoExport?tables=Card,%20CardTag,%20DerivedCard,%20CustomCard,%20CardTagBg&join%20on=Card.dbfId=CardTag.dbfId,%20CardTag.dbfId=DerivedCard.dbfId,%20DerivedCard.dbfId=CustomCard.dbfId,%20CustomCard.dbfId=CardTagBg.dbfId&fields=CONCAT(Card.dbfId)=dbfId,%20Card.id=id,%20CONCAT(Card.name)=name,%20DerivedCard.minionTypeStrings=Races,%20CardTag.keywords=keywords,%20CardTag.refs=refs,%20CardTag.stringTags=stringTags,%20CONCAT(CustomCard.mechanicTags__full)=wikiMechanics,%20CONCAT(CustomCard.refTags__full)=wikiTags,%20CONCAT(CustomCard.hiddenTags__full)=wikiHiddenTags&where=CardTagBg.isPoolSpell=1%20OR%20CardTagBg.isPoolTrinket=1%20OR%20CardTagBg.isPoolMinion=1&limit=2000&format=json";
 
             var handler = new HttpClientHandler()
             {
@@ -195,7 +195,7 @@ namespace MyHsHelper
         {
             stackPanel = new PlugInDisplayControl();
             stackPanel.Name = panelName;
-            stackPanel.Visibility = System.Windows.Visibility.Collapsed;
+            stackPanel.Visibility = System.Windows.Visibility.Visible;
             Core.OverlayCanvas.Children.Add(stackPanel);
 
             Canvas.SetTop(stackPanel, Settings.Default.Top);

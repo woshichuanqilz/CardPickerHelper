@@ -41,6 +41,7 @@ namespace MyHsHelper
         public string LocName { get; set; } // 新增 LocName 属性
     }
 
+
     /// <summary>
     /// Wires up your plug-ins' logic once HDT loads it in to the session.
     /// </summary>
@@ -58,9 +59,6 @@ namespace MyHsHelper
         /// <value>The author's name.</value>
         public string Author => "Li";
         // ToDo: put your name as the author
-
-
-
 
         public string ButtonText => LocalizeTools.GetLocalized("LabelSettings");
 
