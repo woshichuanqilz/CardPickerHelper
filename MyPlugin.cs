@@ -3,9 +3,17 @@ using MyHsHelper.Controls;
 using MyHsHelper.Logic;
 using MyHsHelper.Properties;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Newtonsoft.Json;
 using Core = Hearthstone_Deck_Tracker.API.Core;
+using Hearthstone_Deck_Tracker.Enums;
 
 namespace MyHsHelper
 {
@@ -16,7 +24,15 @@ namespace MyHsHelper
     public class MyHsHelper : IDisposable
     {
         // ToDo: The window shouldn't be statically named
-        private static string panelName = "pluginStackPanelView";
+        private static string panelName = "MyHsHelper";
+
+        private List<CardWikiData> cardDataList;
+        public List<(string Item, string Source)> combinedList; // 添加成员变量
+
+        public List<string> AllWikiTagsList;
+        public List<string> AllKeywordsList;
+        public List<string> AllWikiMechanicsList;
+        public List<string> AllRacesList;
 
         /// <summary>
         /// The class that allows us to let the user move the panel
@@ -37,7 +53,111 @@ namespace MyHsHelper
             InitViewPanel();
 
             GameEvents.OnGameStart.Add(GameTypeCheck);
+            //GameEvents.OnGameStart.Add(OnGameStart);
+            GameEvents.OnTurnStart.Add(OnTurnStart);
             GameEvents.OnGameEnd.Add(CleanUp);
+        }
+
+        public void OnGameStart()
+        {
+            var task = DownloadAndParseJsonAsync();
+        }
+
+        public void OnTurnStart(ActivePlayer player)
+        {
+            var task = DownloadAndParseJsonAsync();
+        }
+
+
+        public async Task DownloadAndParseJsonAsync()
+        {
+            const string url =
+                "https://hearthstone.wiki.gg/wiki/Special:CargoExport?tables=Card,%20CardTag,%20DerivedCard,%20CustomCard,%20CardTagBg&join%20on=Card.dbfId=CardTag.dbfId,%20CardTag.dbfId=DerivedCard.dbfId,%20DerivedCard.dbfId=CustomCard.dbfId,%20CustomCard.dbfId=CardTagBg.dbfId&fields=CONCAT(Card.dbfId)=dbfId,%20Card.id=id,%20CONCAT(Card.name)=name,%20DerivedCard.minionTypeStrings=Races,%20CardTag.keywords=keywords,%20CardTag.refs=refs,%20CardTag.stringTags=stringTags,%20CONCAT(CustomCard.mechanicTags__full)=wikiMechanics,%20CONCAT(CustomCard.refTags__full)=wikiTags,%20CONCAT(CustomCard.hiddenTags__full)=wikiHiddenTags&where=CardTagBg.isPoolMinion=1&limit=2000&format=json";
+
+            var handler = new HttpClientHandler()
+            {
+                Proxy = new WebProxy("http://127.0.0.1:10081"),
+                UseProxy = true
+            };
+
+            using (var client = new HttpClient(handler))
+            {
+                // 下载 JSON 数据
+                try
+                {
+                    var json = await client.GetStringAsync(url);
+                    // 解析 JSON 数据并赋值给成员变量
+                    cardDataList = JsonConvert.DeserializeObject<List<CardWikiData>>(json);
+
+                    // 等待任务完成并获取结果
+                    var cardData = cardDataList;
+
+                    // 遍历 cardData 中的每个项
+                    foreach (var card in cardData.Where(card => card.Races != null && card.Races.Count == 1 && string.IsNullOrEmpty(card.Races[0])))
+                    {
+                        card.Races[0] = "Neutral"; // 替换为空字符串的子项为 "Neutral"
+                    }
+
+                    // 合并所有列表并标记来源 make it class member 
+                    combinedList = new List<(string Item, string Source)>();
+
+                    foreach (var card in cardData)
+                    {
+                        if (!string.IsNullOrEmpty(card.StringTags))
+                        {
+                            card.TagsList = card.StringTags.Split(' ')
+                                .Select(tag => tag.Split('=')[0]) // 取每个 tag 的左侧部分
+                                .Distinct() // 去重
+                                .ToList(); // 转换为 List<string>
+                        }
+
+                        // 处理 wikiTags 字段 should split by "&amp;&amp;"
+                        card.WikiTagsList = card.WikiTags?.Split(new[] { "&amp;&amp;" }, StringSplitOptions.None).ToList();
+                        // 处理 wikiMechanics 字段 should split by "&amp;&amp;"
+                        card.WikiMechanicsList = card.WikiMechanics?.Split(new[] { "&amp;&amp;" }, StringSplitOptions.None).ToList();
+                        // remove duplicated item in wikiMechanicsList with wikiTagsList ignore case and if WikiMechanicsList is not null
+                        if (card.WikiTagsList != null)
+                            card.WikiMechanicsList = card.WikiMechanicsList?.Where(item => !card.WikiTagsList.Contains(item, StringComparer.OrdinalIgnoreCase)).ToList();
+                        // remove duplicated item in wikiMechanicsList with keywordsList ignore case
+                        if (card.KeywordsList != null)
+                            card.WikiMechanicsList = card.WikiMechanicsList?.Where(item => !card.KeywordsList.Contains(item, StringComparer.OrdinalIgnoreCase)).ToList();
+
+                        // 处理 keywords 字段 and make it lower case
+                        card.KeywordsList = card.Keywords?.ToLower().Split(' ').ToList(); // 将 keywords 转换为 List<string>
+                        // 处理 Races 字段 should split by "&amp;&amp;"
+                        card.RacesList = card.Races[0]?.Split(new[] { "&amp;&amp;" }, StringSplitOptions.None).ToList();
+
+
+                        // 合并所有列表并标记来源, 重复内容不添加
+                        if (card.RacesList != null)
+                            combinedList.AddRange(card.RacesList.Select(item => (item, "Races")).Distinct());
+                        if (card.WikiMechanicsList != null)
+                            combinedList.AddRange(card.WikiMechanicsList.Select(item => (item, "WikiMechanics")).Distinct());
+                        if (card.WikiTagsList != null)
+                            combinedList.AddRange(card.WikiTagsList.Select(item => (item, "WikiTags")).Distinct());
+                        if (card.KeywordsList != null)
+                            combinedList.AddRange(card.KeywordsList.Select(item => (item, "Keywords")).Distinct());
+                        combinedList = combinedList
+                            .GroupBy(item => item.Item1.ToLower()) // 忽略大小写
+                            .Select(group => group.First()) // 选择每组的第一个项
+                            .ToList();
+                    }
+
+                    // 提取所有 WikiTags , Keywords, WikiMechanics, Races
+                    AllWikiTagsList = combinedList.Where(item => item.Source == "WikiTags").Select(item => item.Item1).Distinct().ToList();
+                    AllKeywordsList = combinedList.Where(item => item.Source == "Keywords").Select(item => item.Item1).Distinct().ToList();
+                    AllWikiMechanicsList = combinedList.Where(item => item.Source == "WikiMechanics").Select(item => item.Item1).Distinct().ToList();
+                    AllRacesList = combinedList.Where(item => item.Source == "Races").Select(item => item.Item1).Distinct().ToList();
+
+                    //return await Task.FromResult(new List<CardWikiData>()); // 返回空列表
+                }
+                catch (HttpRequestException)
+                {
+                    // 处理请求异常
+                    MessageBox.Show("Download data error. Please check the proxy code in this downloadAndParseJsonAsync function.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            //return await Task.FromResult(new List<CardWikiData>()); // 返回空列表
         }
 
         /// <summary>

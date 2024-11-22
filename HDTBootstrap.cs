@@ -9,18 +9,37 @@ using System.Reflection;
 using System.Windows.Controls;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using HearthMirror;
 using Hearthstone_Deck_Tracker;
 using Hearthstone_Deck_Tracker.Enums;
 using Hearthstone_Deck_Tracker.Hearthstone;
 using Hearthstone_Deck_Tracker.Hearthstone.Entities;
 using Card = Hearthstone_Deck_Tracker.Hearthstone.Card;
 using HearthDb.Enums;
+using System.Net;
+using System.Windows;
+using Newtonsoft.Json;
 
 namespace MyHsHelper
 {
+    public class CardWikiData
+    {
+        public string DbfId { get; set; }
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Keywords { get; set; } // 原始 keywords 字段
+        public List<string> KeywordsList { get; set; } // 新增 KeywordsList 属性
+        public string StringTags { get; set; }
+        public List<string> TagsList { get; set; } // 新增 TagsList ���性
+        public string WikiMechanics { get; set; } // wikiMechanics 属性
+        public List<string> WikiMechanicsList { get; set; } // 新增 wikiMechanicsList 属性
+        public string WikiTags { get; set; } // wikiTags 属性
+        public List<string> WikiTagsList { get; set; } // 新增 wikiTagsList 属性
+        public string WikiHiddenTags { get; set; } // 原始 wikiHiddenTags 属性
+        public List<string> WikiHiddenTagsList { get; set; } // 新增 wikiHiddenTagsList 属性
+        public List<string> Races { get; set; } // 新增 Races 属性
+        public List<string> RacesList { get; set; } // 新增 Races 属性
+    }
+
     /// <summary>
     /// Wires up your plug-ins' logic once HDT loads it in to the session.
     /// </summary>
@@ -36,8 +55,10 @@ namespace MyHsHelper
         /// The author, so your name.
         /// </summary>
         /// <value>The author's name.</value>
-        public string Author => "Author Name";
+        public string Author => "Li";
         // ToDo: put your name as the author
+
+
 
 
         public string ButtonText => LocalizeTools.GetLocalized("LabelSettings");
@@ -76,6 +97,8 @@ namespace MyHsHelper
         }
 
         public void OnButtonPress() => SettingsView.Flyout.IsOpen = true;
+
+
 
         public void OnLoad()
         {
