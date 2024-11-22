@@ -29,7 +29,7 @@ namespace MyHsHelper
         public string Keywords { get; set; } // 原始 keywords 字段
         public List<string> KeywordsList { get; set; } // 新增 KeywordsList 属性
         public string StringTags { get; set; }
-        public List<string> TagsList { get; set; } // 新增 TagsList ���性
+        public List<string> TagsList { get; set; } // 新增 TagsList 性
         public string WikiMechanics { get; set; } // wikiMechanics 属性
         public List<string> WikiMechanicsList { get; set; } // 新增 wikiMechanicsList 属性
         public string WikiTags { get; set; } // wikiTags 属性
@@ -38,6 +38,7 @@ namespace MyHsHelper
         public List<string> WikiHiddenTagsList { get; set; } // 新增 wikiHiddenTagsList 属性
         public List<string> Races { get; set; } // 新增 Races 属性
         public List<string> RacesList { get; set; } // 新增 Races 属性
+        public string LocName { get; set; } // 新增 LocName 属性
     }
 
     /// <summary>
@@ -121,6 +122,12 @@ namespace MyHsHelper
         /// Called when [update].
         /// </summary>
         public void OnUpdate()
+        {
+            GetGameEntitiesInfo();
+        }
+
+        // 新增方法：获取游戏实体信息
+        private void GetGameEntitiesInfo()
         {
             // Card in Bob
             var minions_in_bob = new List<Entity>();

@@ -14,6 +14,9 @@ using System.Windows.Media;
 using Newtonsoft.Json;
 using Core = Hearthstone_Deck_Tracker.API.Core;
 using Hearthstone_Deck_Tracker.Enums;
+using HearthDb.Enums;
+using HearthDb;
+using System.IO;
 
 namespace MyHsHelper
 {
@@ -53,15 +56,10 @@ namespace MyHsHelper
             InitViewPanel();
 
             GameEvents.OnGameStart.Add(GameTypeCheck);
-            //GameEvents.OnGameStart.Add(OnGameStart);
-            GameEvents.OnTurnStart.Add(OnTurnStart);
             GameEvents.OnGameEnd.Add(CleanUp);
+            OnTurnStart(ActivePlayer.Player);
         }
 
-        public void OnGameStart()
-        {
-            var task = DownloadAndParseJsonAsync();
-        }
 
         public void OnTurnStart(ActivePlayer player)
         {
@@ -72,7 +70,7 @@ namespace MyHsHelper
         public async Task DownloadAndParseJsonAsync()
         {
             const string url =
-                "https://hearthstone.wiki.gg/wiki/Special:CargoExport?tables=Card,%20CardTag,%20DerivedCard,%20CustomCard,%20CardTagBg&join%20on=Card.dbfId=CardTag.dbfId,%20CardTag.dbfId=DerivedCard.dbfId,%20DerivedCard.dbfId=CustomCard.dbfId,%20CustomCard.dbfId=CardTagBg.dbfId&fields=CONCAT(Card.dbfId)=dbfId,%20Card.id=id,%20CONCAT(Card.name)=name,%20DerivedCard.minionTypeStrings=Races,%20CardTag.keywords=keywords,%20CardTag.refs=refs,%20CardTag.stringTags=stringTags,%20CONCAT(CustomCard.mechanicTags__full)=wikiMechanics,%20CONCAT(CustomCard.refTags__full)=wikiTags,%20CONCAT(CustomCard.hiddenTags__full)=wikiHiddenTags&where=CardTagBg.isPoolMinion=1&limit=2000&format=json";
+                "https://hearthstone.wiki.gg/wiki/Special:CargoExport?tables=Card,%20CardTag,%20DerivedCard,%20CustomCard,%20CardTagBg&join%20on=Card.dbfId=CardTag.dbfId,%20CardTag.dbfId=DerivedCard.dbfId,%20DerivedCard.dbfId=CustomCard.dbfId,%20CustomCard.dbfId=CardTagBg.dbfId&fields=CONCAT(Card.dbfId)=dbfId,%20Card.id=id,%20CONCAT(Card.name)=name,%20DerivedCard.minionTypeStrings=Races,%20CardTag.keywords=keywords,%20CardTag.refs=refs,%20CardTag.stringTags=stringTags,%20CONCAT(CustomCard.mechanicTags__full)=wikiMechanics,%20CONCAT(CustomCard.refTags__full)=wikiTags,%20CONCAT(CustomCard.hiddenTags__full)=wikiHiddenTags&where=DerivedCard.setId=1453&limit=10000&format=json";
 
             var handler = new HttpClientHandler()
             {
@@ -98,6 +96,9 @@ namespace MyHsHelper
                         card.Races[0] = "Neutral"; // 替换为空字符串的子项为 "Neutral"
                     }
 
+                    // remove the card with Id start with "BGDUO"
+                    cardData = cardData.Where(card => !card.Id.StartsWith("BGDUO")).ToList();
+
                     // 合并所有列表并标记来源 make it class member 
                     combinedList = new List<(string Item, string Source)>();
 
@@ -109,6 +110,12 @@ namespace MyHsHelper
                                 .Select(tag => tag.Split('=')[0]) // 取每个 tag 的左侧部分
                                 .Distinct() // 去重
                                 .ToList(); // 转换为 List<string>
+                        }
+
+                        Cards.All.TryGetValue(card.Id, out var dbCard);
+                        if (dbCard != null)
+                        {
+                            card.LocName = dbCard.GetLocName(Locale.zhCN);
                         }
 
                         // 处理 wikiTags 字段 should split by "&amp;&amp;"
@@ -143,6 +150,8 @@ namespace MyHsHelper
                             .ToList();
                     }
 
+
+
                     // 提取所有 WikiTags , Keywords, WikiMechanics, Races
                     AllWikiTagsList = combinedList.Where(item => item.Source == "WikiTags").Select(item => item.Item1).Distinct().ToList();
                     AllKeywordsList = combinedList.Where(item => item.Source == "Keywords").Select(item => item.Item1).Distinct().ToList();
@@ -157,7 +166,10 @@ namespace MyHsHelper
                     MessageBox.Show("Download data error. Please check the proxy code in this downloadAndParseJsonAsync function.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
-            //return await Task.FromResult(new List<CardWikiData>()); // 返回空列表
+
+            var tjson = JsonConvert.SerializeObject(cardDataList, Formatting.Indented); // 将列表序列化为 JSON 字符串
+            // write to json file
+            System.IO.File.WriteAllText("cardDataList.json", tjson);
         }
 
         /// <summary>
@@ -177,7 +189,7 @@ namespace MyHsHelper
 
         private void InitLogic()
         {
-            // Here you can begin to work your Plug-in magic
+            var task = DownloadAndParseJsonAsync();
         }
 
         private void InitViewPanel()
