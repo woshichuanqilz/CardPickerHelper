@@ -19,11 +19,10 @@
     <StackPanel.Resources>
         <themes:ThemeManager x:Key="ThemeManager" />
     </StackPanel.Resources>
-    <Grid MinWidth="50" MinHeight="50">
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="2*" />
-            <RowDefinition Height="2*" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="4*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -47,7 +46,7 @@
                     MinHeight="5"
                     Margin="5,2"
                     FontSize="14"
-                    Text="MyHsHelper Panel"
+                    Text="CardPickHelper"
                     UseLayoutRounding="True"
                     Visibility="Visible" />
             </Border>
@@ -55,40 +54,32 @@
 
         <StackPanel
             Grid.Row="1"
-            MinHeight="50"
+            MinHeight="100"
             Background="#FF0B203A">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Label
-                    Name="LblTextArea1"
-                    Grid.Row="0"
-                    Grid.Column="0"
-                    Margin="10"
-                    Padding="6"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Content="Card Name"
-                    FontSize="18"
-                    FontWeight="Bold"
-                    Foreground="#FFC8E51B" />
-                <Label
-                    Name="LblTextArea2"
-                    Grid.Row="1"
-                    Grid.Column="0"
-                    Margin="10"
-                    Padding="6"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Content="Artist Name"
-                    FontSize="16"
-                    FontWeight="Bold"
-                    Foreground="#FFC8E51B" />
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="{Binding TargetCard}"
+                        Height="{Binding RelativeSource={RelativeSource AncestorType=ListViewItem}, Path=ActualHeight}"
+                        Width="Auto"
+                        Stretch="Uniform"
+                        Margin="0,0,10,0"
+                    />
+                    <ListView Grid.Row="1" Name="ImageListView"
+                        ItemsSource="{Binding ImageCollection}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Image Source="{Binding}" Height="100" Width="100" Stretch="Uniform"
+                                    Margin="5" />
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
             </Grid>
         </StackPanel>
     </Grid>

@@ -17,6 +17,7 @@ using Hearthstone_Deck_Tracker.Enums;
 using HearthDb.Enums;
 using HearthDb;
 using System.IO;
+using System.Windows.Media.Imaging;
 
 namespace MyHsHelper
 {
@@ -31,6 +32,7 @@ namespace MyHsHelper
 
         private List<CardWikiData> cardDataList;
         public List<(string Item, string Source)> combinedList; // 添加成员变量
+        private readonly HttpClient httpClient = new HttpClient();
 
         public List<string> AllWikiTagsList;
         public List<string> AllKeywordsList;
@@ -57,13 +59,45 @@ namespace MyHsHelper
 
             GameEvents.OnGameStart.Add(GameTypeCheck);
             GameEvents.OnGameEnd.Add(CleanUp);
-            OnTurnStart(ActivePlayer.Player);
         }
 
 
-        public void OnTurnStart(ActivePlayer player)
+        public async Task<BitmapImage> GetCardImageAsync(string cardId)
         {
-            var task = DownloadAndParseJsonAsync();
+            while (true)
+            {
+                // 如果image文件夹不存在，则创建
+                if (!Directory.Exists("image"))
+                {
+                    Directory.CreateDirectory("image");
+                }
+
+                var imagePath = System.IO.Path.Combine("image", $"{cardId}.jpg");
+
+                // 检查文件是否存在
+                if (File.Exists(imagePath))
+                {
+                    var bitmapImage = new BitmapImage();
+                    bitmapImage.BeginInit();
+                    bitmapImage.UriSource = new Uri(imagePath, UriKind.RelativeOrAbsolute);
+                    bitmapImage.CacheOption = BitmapCacheOption.OnLoad; // 确保图像在加载后可用
+                    bitmapImage.EndInit();
+                    bitmapImage.Freeze(); // 使图像可以在不同线程中使用
+                    return bitmapImage;
+                }
+                else
+                {
+                    // 下载图片并保存
+                    var url = $"https://static.zerotoheroes.com/hearthstone/cardart/256x/{cardId}.jpg";
+                    var imageBytes = await httpClient.GetByteArrayAsync(url);
+
+                    // 使用 FileStream 异步写入文件
+                    using (var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
+                    {
+                        await fileStream.WriteAsync(imageBytes, 0, imageBytes.Length);
+                    }
+                }
+            }
         }
 
 
@@ -195,7 +229,7 @@ namespace MyHsHelper
         {
             stackPanel = new PlugInDisplayControl();
             stackPanel.Name = panelName;
-            stackPanel.Visibility = System.Windows.Visibility.Visible;
+            stackPanel.Visibility = System.Windows.Visibility.Collapsed;
             Core.OverlayCanvas.Children.Add(stackPanel);
 
             Canvas.SetTop(stackPanel, Settings.Default.Top);

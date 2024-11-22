@@ -1,7 +1,9 @@
 ﻿using Hearthstone_Deck_Tracker.API;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -23,6 +25,7 @@ namespace MyHsHelper.Controls
     /// </summary>
     public partial class PlugInDisplayControl : StackPanel
     {
+
         public PlugInDisplayControl()
         {
             InitializeComponent();
@@ -44,8 +47,9 @@ namespace MyHsHelper.Controls
         {
 
             this.Visibility = System.Windows.Visibility.Visible;
-            this.LblTextArea1.Content = card.Name;
-            this.LblTextArea2.Content = card.Artist;
+            //this.LblTextArea1.Content = card.Name;
+            //this.LblTextArea2.Content = card.Artist;
         }
+
     }
 }
