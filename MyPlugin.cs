@@ -88,21 +88,20 @@ namespace MyHsHelper
                     cardDataList = JsonConvert.DeserializeObject<List<CardWikiData>>(json);
 
                     // 等待任务完成并获取结果
-                    var cardData = cardDataList;
 
                     // 遍历 cardData 中的每个项
-                    foreach (var card in cardData.Where(card => card.Races != null && card.Races.Count == 1 && string.IsNullOrEmpty(card.Races[0])))
+                    foreach (var card in cardDataList.Where(card => card.Races != null && card.Races.Count == 1 && string.IsNullOrEmpty(card.Races[0])))
                     {
                         card.Races[0] = "Neutral"; // 替换为空字符串的子项为 "Neutral"
                     }
 
-                    // remove the card with Id start with "BGDUO"
-                    cardData = cardData.Where(card => !card.Id.StartsWith("BGDUO")).ToList();
+                    // remove the card with Id start with "BGDUO" use for statement
+                    cardDataList = cardDataList.Where(card => !card.Id.StartsWith("BGDUO")).ToList();
 
                     // 合并所有列表并标记来源 make it class member 
                     combinedList = new List<(string Item, string Source)>();
 
-                    foreach (var card in cardData)
+                    foreach (var card in cardDataList)
                     {
                         if (!string.IsNullOrEmpty(card.StringTags))
                         {
