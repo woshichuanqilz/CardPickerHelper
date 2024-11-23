@@ -54,6 +54,8 @@ namespace MyHsHelper
         public MyHsHelper InsMyHsHelper;
 
         private List<Entity> cardsOnMyBoard = new List<Entity>();
+        private List<Entity> cardsInHand = new List<Entity>();
+        private List<Entity> cardsInMyControl = new List<Entity>();
 
         /// <summary>
         /// The author, so your name.
@@ -91,10 +93,7 @@ namespace MyHsHelper
                 Header = Name
             };
 
-            this.MenuItem.Click += (sender, args) =>
-            {
-                OnButtonPress();
-            };
+            this.MenuItem.Click += (sender, args) => { OnButtonPress(); };
         }
 
         public void OnButtonPress() => SettingsView.Flyout.IsOpen = true;
@@ -132,39 +131,46 @@ namespace MyHsHelper
             // Card in Bob
             var minionsInBob = new List<Entity>();
             var bgsInBob = new List<Entity>();
-            if (Core.Game.Opponent.Hero?.CardId?.Contains("TB_BaconShopBob") ?? false)
-            {
-                var entities = Core.Game.Entities.Values
-                    .Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay && x.IsControlledBy(Core.Game.Opponent.Id))
-                    .Select(x => x.Clone())
-                    .ToLookup(x => x.IsMinion);
+            if (!(Core.Game.Opponent.Hero?.CardId?.Contains("TB_BaconShopBob") ?? false)) return;
+            var entities = Core.Game.Entities.Values
+                .Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay &&
+                            x.IsControlledBy(Core.Game.Opponent.Id))
+                .Select(x => x.Clone())
+                .ToLookup(x => x.IsMinion);
 
-                minionsInBob = entities[true].ToList();
-                bgsInBob = entities[false].ToList();
-            }
+            minionsInBob = entities[true].ToList();
+            bgsInBob = entities[false].ToList();
 
-            var tCardsOnMyBoard = Core.Game.Entities.Values.Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay && x.IsControlledBy(Core.Game.Player.Id)).Select(x => x.Clone()).Select(entity => entity.Clone()).ToList();
+            var tCardsOnMyBoard = Core.Game.Entities.Values
+                .Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay &&
+                            x.IsControlledBy(Core.Game.Player.Id)).Select(x => x.Clone())
+                .Select(entity => entity.Clone()).ToList();
             // Update 
-            foreach (var item in tCardsOnMyBoard.Where(item => !cardsOnMyBoard.Contains(item)))
-            {
-                cardsOnMyBoard = tCardsOnMyBoard;
-                break;
-            }
-
-            foreach (var card in cardsOnMyBoard)
-            {
-                Cards.All.TryGetValue(card.CardId.ToString(), out var dbCard);
-                //if (dbCard != null)
-                //{
-                //    Console.WriteLine(dbCard.GetLocName(Locale.zhCN));
-                //}
-            }
+            InsMyHsHelper.UpdateListIfSame(cardsOnMyBoard, tCardsOnMyBoard);
 
             // Card in hand
-            var cardsInHand = Core.Game.Entities.Values.Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay && x.IsControlledBy(Core.Game.Player.Id)).Select(x => x.Clone()).ToList();
+            var tCardsInHand = Core.Game.Entities.Values
+                .Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay &&
+                            x.IsControlledBy(Core.Game.Player.Id)).Select(x => x.Clone()).ToList();
+            InsMyHsHelper.UpdateListIfSame(cardsInHand, tCardsInHand);
 
             // My Trinkets
             var myTrinkets = Core.Game.Player.Trinkets.Where(trinket => trinket.CardId != null).ToList().ToList();
+
+            var tCardsInMyControl = cardsOnMyBoard.Concat(cardsInHand).Where(card => card != null).ToList();
+            if (InsMyHsHelper.UpdateListIfSame(cardsInMyControl, tCardsInMyControl)) return;
+            foreach (var card in cardsInMyControl.Where(card => card.CardId != null))
+            {
+                if (!(Core.Game.Opponent.Hero?.CardId?.Contains("TB_BaconShopBob") ?? false)) continue;
+                if (card.CardId == null) continue;
+                Cards.All.TryGetValue(card.CardId.ToString(), out var dbCard);
+                if (dbCard == null) continue;
+                // remove suffix "_G" if exists
+                var cardId = dbCard.Id.Replace("_G", "");
+                var locName = dbCard.GetLocName(Locale.zhCN);
+                var tagsList = InsMyHsHelper.FindCardInfo(cardId).TagsList;
+                Console.WriteLine(locName + " " + string.Join(",", tagsList));
+            }
         }
     }
 }

@@ -176,7 +176,6 @@ namespace MyHsHelper
                         if (dbCard != null)
                         {
                             card.LocName = dbCard.GetLocName(Locale.zhCN);
-                            Console.WriteLine("dbCard " + card.Id + ": " + card.LocName);
                         }
 
                         // 处理 wikiTags 字段 should split by "&amp;&amp;"
@@ -217,7 +216,6 @@ namespace MyHsHelper
                             .Select(group => group.First()) // 选择每组的第一个项
                             .ToList();
                     }
-                    Console.WriteLine("data loop end");
 
 
 
@@ -239,6 +237,28 @@ namespace MyHsHelper
             var tjson = JsonConvert.SerializeObject(cardDataList, Formatting.Indented); // 将列表序列化为 JSON 字符串
             // write to json file
             System.IO.File.WriteAllText("cardDataList.json", tjson);
+        }
+
+        // find card info in cardDataListby cardId
+        public CardWikiData FindCardInfo(string cardId)
+        {
+            return cardDataList.FirstOrDefault(card => card.Id == cardId);
+        }
+
+        // update list if not same list1 not be changed outside the function
+        public bool UpdateListIfSame(List<Entity> list1, List<Entity> list2)
+        {
+            //if list1 and list2 count is same and all entities id is same
+            if (list1.Count == list2.Count && list1.All(entity => list2.Any(e => e.CardId == entity.CardId)))
+            {
+                return true;
+            }
+
+            // 清空 list1 并添加 list2 的内容
+            list1.Clear();
+            list1.AddRange(list2);
+
+            return false;
         }
 
         /// <summary>
