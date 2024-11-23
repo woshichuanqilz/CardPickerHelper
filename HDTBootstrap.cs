@@ -154,12 +154,11 @@ namespace MyHsHelper
             foreach (var card in cardsOnMyBoard)
             {
                 Cards.All.TryGetValue(card.CardId.ToString(), out var dbCard);
-                if (dbCard != null)
-                {
-                    Console.WriteLine(dbCard.GetLocName(Locale.zhCN));
-                }
+                //if (dbCard != null)
+                //{
+                //    Console.WriteLine(dbCard.GetLocName(Locale.zhCN));
+                //}
             }
-            Console.WriteLine("cardsOnMyBoard:" + cardsOnMyBoard.Count);
 
             // Card in hand
             var cardsInHand = Core.Game.Entities.Values.Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay && x.IsControlledBy(Core.Game.Player.Id)).Select(x => x.Clone()).ToList();

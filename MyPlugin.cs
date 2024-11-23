@@ -176,6 +176,7 @@ namespace MyHsHelper
                         if (dbCard != null)
                         {
                             card.LocName = dbCard.GetLocName(Locale.zhCN);
+                            Console.WriteLine("dbCard " + card.Id + ": " + card.LocName);
                         }
 
                         // 处理 wikiTags 字段 should split by "&amp;&amp;"
@@ -194,15 +195,21 @@ namespace MyHsHelper
                         // 处理 Races 字段 should split by "&amp;&amp;"
                         card.RacesList = card.Races[0]?.Split(new[] { "&amp;&amp;" }, StringSplitOptions.None).ToList();
                         // TagsList 等于 WikiMechanicsList 和 WikiTagsList 全部Lower处理后的 的并集. 
-                        card.TagsList = card.WikiMechanicsList?.Concat(card.WikiTagsList).Select(item => item.ToLower()).Distinct().ToList();
-
-                        // 合并所有列表并标记来源, 重复内容不添加
-                        if (card.RacesList != null)
-                            combinedList.AddRange(card.RacesList.Select(item => (item, "Races")).Distinct());
-                        if (card.WikiMechanicsList != null)
-                            combinedList.AddRange(card.WikiMechanicsList.Select(item => (item, "WikiMechanics")).Distinct());
                         if (card.WikiTagsList != null)
-                            combinedList.AddRange(card.WikiTagsList.Select(item => (item, "WikiTags")).Distinct());
+                        {
+                            card.TagsList = card.WikiMechanicsList?.Concat(card.WikiTagsList)
+                                .Select(item => item.ToLower()).Distinct().ToList();
+
+                            // 合并所有列表并标记来源, 重复内容不添加
+                            if (card.RacesList != null)
+                                combinedList.AddRange(card.RacesList.Select(item => (item, "Races")).Distinct());
+                            if (card.WikiMechanicsList != null)
+                                combinedList.AddRange(card.WikiMechanicsList.Select(item => (item, "WikiMechanics"))
+                                    .Distinct());
+                            if (card.WikiTagsList != null)
+                                combinedList.AddRange(card.WikiTagsList.Select(item => (item, "WikiTags")).Distinct());
+                        }
+
                         if (card.KeywordsList != null)
                             combinedList.AddRange(card.KeywordsList.Select(item => (item, "Keywords")).Distinct());
                         combinedList = combinedList
@@ -210,6 +217,7 @@ namespace MyHsHelper
                             .Select(group => group.First()) // 选择每组的第一个项
                             .ToList();
                     }
+                    Console.WriteLine("data loop end");
 
 
 
