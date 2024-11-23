@@ -51,7 +51,9 @@ namespace MyHsHelper
         /// <summary>
         /// The Plug-in's running instance
         /// </summary>
-        public MyHsHelper pluginInstance;
+        public MyHsHelper InsMyHsHelper;
+
+        private List<Entity> cardsOnMyBoard = new List<Entity>();
 
         /// <summary>
         /// The author, so your name.
@@ -101,7 +103,7 @@ namespace MyHsHelper
 
         public void OnLoad()
         {
-            pluginInstance = new MyHsHelper();
+            InsMyHsHelper = new MyHsHelper();
             AddMenuItem();
         }
 
@@ -112,8 +114,8 @@ namespace MyHsHelper
         {
             Settings.Default.Save();
 
-            pluginInstance?.CleanUp();
-            pluginInstance = null;
+            InsMyHsHelper?.CleanUp();
+            InsMyHsHelper = null;
         }
 
         /// <summary>
@@ -128,21 +130,42 @@ namespace MyHsHelper
         private void GetGameEntitiesInfo()
         {
             // Card in Bob
+            var minionsInBob = new List<Entity>();
+            var bgsInBob = new List<Entity>();
+            if (Core.Game.Opponent.Hero?.CardId?.Contains("TB_BaconShopBob") ?? false)
+            {
+                var entities = Core.Game.Entities.Values
+                    .Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay && x.IsControlledBy(Core.Game.Opponent.Id))
+                    .Select(x => x.Clone())
+                    .ToLookup(x => x.IsMinion);
 
-            List<Race> l = BattlegroundsUtils.GetAvailableRaces(Core.Game.CurrentGameStats?.GameId)?.ToList();
+                minionsInBob = entities[true].ToList();
+                bgsInBob = entities[false].ToList();
+            }
 
-            // Card on my board
-            var cardsOnMyBoard = Core.Game.Entities.Values.Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay && x.IsControlledBy(Core.Game.Player.Id)).Select(x => x.Clone()).Select(entity => entity.Clone()).ToList();
+            var tCardsOnMyBoard = Core.Game.Entities.Values.Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay && x.IsControlledBy(Core.Game.Player.Id)).Select(x => x.Clone()).Select(entity => entity.Clone()).ToList();
+            // Update 
+            foreach (var item in tCardsOnMyBoard.Where(item => !cardsOnMyBoard.Contains(item)))
+            {
+                cardsOnMyBoard = tCardsOnMyBoard;
+                break;
+            }
+
+            foreach (var card in cardsOnMyBoard)
+            {
+                Cards.All.TryGetValue(card.CardId.ToString(), out var dbCard);
+                if (dbCard != null)
+                {
+                    Console.WriteLine(dbCard.GetLocName(Locale.zhCN));
+                }
+            }
+            Console.WriteLine("cardsOnMyBoard:" + cardsOnMyBoard.Count);
 
             // Card in hand
             var cardsInHand = Core.Game.Entities.Values.Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay && x.IsControlledBy(Core.Game.Player.Id)).Select(x => x.Clone()).ToList();
-            var cardsInHand2 = Core.Game.Entities.Values.Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInZone(Zone.PLAY) && x.IsControlledBy(Core.Game.Player.Id)).Select(x => x.Clone()).ToList();
 
             // My Trinkets
             var myTrinkets = Core.Game.Player.Trinkets.Where(trinket => trinket.CardId != null).ToList().ToList();
-
-            Card card = Database.GetCardFromId("BGS_081");
-            Log.Info("My Info");
         }
     }
 }

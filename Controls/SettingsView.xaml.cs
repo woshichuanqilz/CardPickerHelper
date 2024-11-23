@@ -16,7 +16,7 @@ namespace MyHsHelper.Controls
         private static Flyout _flyout;
 
         // ToDo: The window shouldn't be statically named
-        private static string panelName = "MyHsHelper";
+        private static string panelName = "InsMyHsHelper";
         private StackPanel stackPanel;
 
         public SettingsView()

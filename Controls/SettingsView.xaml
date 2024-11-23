@@ -10,7 +10,7 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     lex:LocalizeDictionary.DesignCulture="en"
-    lex:ResxLocalizationProvider.DefaultAssembly="MyHsHelper"
+    lex:ResxLocalizationProvider.DefaultAssembly="InsMyHsHelper"
     lex:ResxLocalizationProvider.DefaultDictionary="LocalizeTools"
     BorderThickness="1"
     VerticalScrollBarVisibility="Hidden"

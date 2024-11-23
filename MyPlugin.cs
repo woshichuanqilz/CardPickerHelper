@@ -32,7 +32,7 @@ namespace MyHsHelper
         // ToDo: The window shouldn't be statically named
         private static string panelName = "MyHsHelper";
 
-        private List<CardWikiData> cardDataList;
+        public List<CardWikiData> cardDataList;
         public List<(string Item, string Source)> combinedList; // 添加成员变量
         private readonly HttpClient httpClient = new HttpClient();
 
@@ -62,14 +62,29 @@ namespace MyHsHelper
 
             // We are adding the Panel here for simplicity.  It would be better to add it under InitLogic()
             InitViewPanel();
+            InitLogic();
 
-            GameEvents.OnGameStart.Add(GameTypeCheck);
             GameEvents.OnOpponentCreateInPlay.Add(OnOpponentCreateInPlay);
+            GameEvents.OnOpponentPlayToGraveyard.Add(OnOpponentPlayToGraveyard);
             GameEvents.OnOpponentGet.Add(OnOpponentGet);
-            GameEvents.OnOpponentDeckToPlay.Add(OnOpponentDeckToPlay);
-            GameEvents.OnOpponentPlay.Add(OnOpponentPlay);
             GameEvents.OnGameEnd.Add(CleanUp);
+            GameEvents.OnOpponentHeroPower.Add(OnOpponentHeroPower);
+        }
 
+        private void OnOpponentHeroPower()
+        {
+            Console.WriteLine("OnOpponentHeroPower");
+        }
+
+        private void OnOpponentPlayToGraveyard(Hearthstone_Deck_Tracker.Hearthstone.Card card)
+        {
+            if (Core.Game.Opponent.Hero != null && Core.Game.Opponent.Hero.CardId != null && Core.Game.Opponent.Hero != null && !Core.Game.Opponent.Hero.CardId.Contains("TB_BaconShopBob")) return;
+            if (card == null) throw new ArgumentNullException(nameof(card));
+            Cards.All.TryGetValue(card.Id, out var dbCard);
+            if (dbCard != null)
+            {
+                Console.WriteLine("OnOpponentPlayToGraveyard:" + dbCard.GetLocName(Locale.zhCN));
+            }
         }
 
         private void OnOpponentGet()
@@ -77,35 +92,8 @@ namespace MyHsHelper
             Console.WriteLine("OnOpponentGet");
         }
 
-        private void OnOpponentDeckToPlay(Hearthstone_Deck_Tracker.Hearthstone.Card obj)
-        {
-            Console.WriteLine("OnOpponentDeckToPlay");
-        }
-
-        private void OnOpponentPlay(Hearthstone_Deck_Tracker.Hearthstone.Card obj)
-        {
-            Console.WriteLine("OnOpponentPlay");
-        }
-
         private void OnOpponentCreateInPlay(Hearthstone_Deck_Tracker.Hearthstone.Card card)
         {
-            //if (Core.Game.Opponent.Hero != null && Core.Game.Opponent.Hero.CardId != null && Core.Game.Opponent.Hero != null && !Core.Game.Opponent.Hero.CardId.Contains("TB_BaconShopBob")) return;
-            //var minions_in_bob = new List<Entity>();
-            //var bgs_in_bob = new List<Entity>();
-            //if (!(Core.Game.Opponent.Hero?.CardId?.Contains("TB_BaconShopBob") ?? false)) return;
-            //var entities = Core.Game.Entities.Values
-            //    .Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay && x.IsControlledBy(Core.Game.Opponent.Id))
-            //    .Select(x => x.Clone())
-            //    .ToLookup(x => x.IsMinion);
-
-            //minions_in_bob = entities[true].ToList();
-            //bgs_in_bob = entities[false].ToList();
-            //if (card == null) throw new ArgumentNullException(nameof(card));
-            //Cards.All.TryGetValue(card.Id, out var dbCard);
-            //if (dbCard != null)
-            //{
-            //    Console.WriteLine("OnOpponentCreateInPlay:" + dbCard.GetLocName(Locale.zhCN));
-            //}
         }
 
 
@@ -184,14 +172,6 @@ namespace MyHsHelper
 
                     foreach (var card in cardDataList)
                     {
-                        if (!string.IsNullOrEmpty(card.StringTags))
-                        {
-                            card.TagsList = card.StringTags.Split(' ')
-                                .Select(tag => tag.Split('=')[0]) // 取每个 tag 的左侧部分
-                                .Distinct() // 去重
-                                .ToList(); // 转换为 List<string>
-                        }
-
                         Cards.All.TryGetValue(card.Id, out var dbCard);
                         if (dbCard != null)
                         {
@@ -213,7 +193,8 @@ namespace MyHsHelper
                         card.KeywordsList = card.Keywords?.ToLower().Split(' ').ToList(); // 将 keywords 转换为 List<string>
                         // 处理 Races 字段 should split by "&amp;&amp;"
                         card.RacesList = card.Races[0]?.Split(new[] { "&amp;&amp;" }, StringSplitOptions.None).ToList();
-
+                        // TagsList 等于 WikiMechanicsList 和 WikiTagsList 全部Lower处理后的 的并集. 
+                        card.TagsList = card.WikiMechanicsList?.Concat(card.WikiTagsList).Select(item => item.ToLower()).Distinct().ToList();
 
                         // 合并所有列表并标记来源, 重复内容不添加
                         if (card.RacesList != null)
