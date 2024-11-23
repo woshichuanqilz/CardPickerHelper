@@ -29,10 +29,10 @@ namespace MyHsHelper.Controls
         public PlugInDisplayControl()
         {
             InitializeComponent();
-            FakeLogic();
+            Logic();
         }
 
-        public void FakeLogic()
+        public void Logic()
         {
             GameEvents.OnPlayerHandMouseOver.Add(PlayerHandMouseOver);
             GameEvents.OnMouseOverOff.Add(OnMouseOff);

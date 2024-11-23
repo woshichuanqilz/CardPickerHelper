@@ -128,18 +128,6 @@ namespace MyHsHelper
         private void GetGameEntitiesInfo()
         {
             // Card in Bob
-            var minions_in_bob = new List<Entity>();
-            var bgs_in_bob = new List<Entity>();
-            if (Core.Game.Opponent.Hero?.CardId?.Contains("TB_BaconShopBob") ?? false)
-            {
-                var entities = Core.Game.Entities.Values
-                    .Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay && x.IsControlledBy(Core.Game.Opponent.Id))
-                    .Select(x => x.Clone())
-                    .ToLookup(x => x.IsMinion);
-
-                minions_in_bob = entities[true].ToList();
-                bgs_in_bob = entities[false].ToList();
-            }
 
             List<Race> l = BattlegroundsUtils.GetAvailableRaces(Core.Game.CurrentGameStats?.GameId)?.ToList();
 

@@ -18,6 +18,8 @@ using HearthDb.Enums;
 using HearthDb;
 using System.IO;
 using System.Windows.Media.Imaging;
+using System.Runtime.InteropServices;
+using Hearthstone_Deck_Tracker.Hearthstone.Entities;
 
 namespace MyHsHelper
 {
@@ -54,11 +56,56 @@ namespace MyHsHelper
         /// </summary>
         public MyHsHelper()
         {
+            // 打开控制台
+            AllocConsole();
+            Console.WriteLine("hi there");
+
             // We are adding the Panel here for simplicity.  It would be better to add it under InitLogic()
             InitViewPanel();
 
             GameEvents.OnGameStart.Add(GameTypeCheck);
+            GameEvents.OnOpponentCreateInPlay.Add(OnOpponentCreateInPlay);
+            GameEvents.OnOpponentGet.Add(OnOpponentGet);
+            GameEvents.OnOpponentDeckToPlay.Add(OnOpponentDeckToPlay);
+            GameEvents.OnOpponentPlay.Add(OnOpponentPlay);
             GameEvents.OnGameEnd.Add(CleanUp);
+
+        }
+
+        private void OnOpponentGet()
+        {
+            Console.WriteLine("OnOpponentGet");
+        }
+
+        private void OnOpponentDeckToPlay(Hearthstone_Deck_Tracker.Hearthstone.Card obj)
+        {
+            Console.WriteLine("OnOpponentDeckToPlay");
+        }
+
+        private void OnOpponentPlay(Hearthstone_Deck_Tracker.Hearthstone.Card obj)
+        {
+            Console.WriteLine("OnOpponentPlay");
+        }
+
+        private void OnOpponentCreateInPlay(Hearthstone_Deck_Tracker.Hearthstone.Card card)
+        {
+            //if (Core.Game.Opponent.Hero != null && Core.Game.Opponent.Hero.CardId != null && Core.Game.Opponent.Hero != null && !Core.Game.Opponent.Hero.CardId.Contains("TB_BaconShopBob")) return;
+            //var minions_in_bob = new List<Entity>();
+            //var bgs_in_bob = new List<Entity>();
+            //if (!(Core.Game.Opponent.Hero?.CardId?.Contains("TB_BaconShopBob") ?? false)) return;
+            //var entities = Core.Game.Entities.Values
+            //    .Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay && x.IsControlledBy(Core.Game.Opponent.Id))
+            //    .Select(x => x.Clone())
+            //    .ToLookup(x => x.IsMinion);
+
+            //minions_in_bob = entities[true].ToList();
+            //bgs_in_bob = entities[false].ToList();
+            //if (card == null) throw new ArgumentNullException(nameof(card));
+            //Cards.All.TryGetValue(card.Id, out var dbCard);
+            //if (dbCard != null)
+            //{
+            //    Console.WriteLine("OnOpponentCreateInPlay:" + dbCard.GetLocName(Locale.zhCN));
+            //}
         }
 
 
@@ -260,5 +307,9 @@ namespace MyHsHelper
         {
             inputMoveManager.Dispose();
         }
+
+        // P/Invoke 声明
+        [DllImport("kernel32.dll")]
+        private static extern bool AllocConsole();
     }
 }
