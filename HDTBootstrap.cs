@@ -165,12 +165,23 @@ namespace MyHsHelper
                 if (card.CardId == null) continue;
                 Cards.All.TryGetValue(card.CardId.ToString(), out var dbCard);
                 if (dbCard == null) continue;
-                // remove suffix "_G" if exists
-                var cardId = dbCard.Id.Replace("_G", "");
+                // remove suffix "_G" if exists at the end of cardId
+                if (card.CardId.EndsWith("_G"))
+                    card.CardId = card.CardId.Substring(0, card.CardId.Length - 2);
                 var locName = dbCard.GetLocName(Locale.zhCN);
-                var tagsList = InsMyHsHelper.FindCardInfo(cardId).TagsList;
-                Console.WriteLine(locName + " " + string.Join(",", tagsList));
+                var tagsList = InsMyHsHelper.FindCardInfo(card.CardId)?.TagsList;
+                if (InsMyHsHelper.FindCardInfo(card.CardId) == null || tagsList == null)
+                {
+                    Console.WriteLine(locName + " tagsList is null " + card.CardId);
+                    // append to file 
+                    File.AppendAllText("null_tagsList.txt", locName + " " + card.CardId + "\n");
+                }
+                else
+                {
+                    Console.WriteLine(locName + " " + string.Join(",", tagsList));
+                }
             }
+            Console.WriteLine("----------------------");
         }
     }
 }
