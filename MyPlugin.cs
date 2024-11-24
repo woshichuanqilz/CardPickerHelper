@@ -198,8 +198,22 @@ namespace MyHsHelper
                         {
                             card.WikiTagsList = new List<string>();
                         }
-                        card.TagsList = card.WikiMechanicsList?.Concat(card.WikiTagsList)
+                        if (card.RacesList == null)
+                        {
+                            card.RacesList = new List<string>();
+                        }
+                        if (card.WikiMechanicsList == null)
+                        {
+                            card.WikiMechanicsList = new List<string>();
+                        }
+
+                        Console.WriteLine(card.Id);
+                        // Concat RacesList and WikiMechanicsList and WikiTagsList
+                        card.TagsList = card.RacesList?.Concat(card.WikiMechanicsList)
+                            .Concat(card.WikiTagsList)
                             .Select(item => item.ToLower()).Distinct().ToList();
+                        // lower case all items in TagsList
+                        card.TagsList = card.TagsList.Select(item => item.ToLower()).Distinct().ToList();
 
                         // 合并所有列表并标记来源, 重复内容不添加
                         if (card.RacesList != null)
@@ -246,18 +260,18 @@ namespace MyHsHelper
             return cardDataList.FirstOrDefault(card => card.Id == cardId);
         }
 
-        // update list if not same list1 not be changed outside the function
-        public bool UpdateListIfSame(List<Entity> list1, List<Entity> list2)
+        // update list if not same source not be changed outside the function
+        public bool UpdateListIfSame(List<Entity> source, List<Entity> newValue)
         {
-            //if list1 and list2 count is same and all entities id is same
-            if (list1.Count == list2.Count && list1.All(entity => list2.Any(e => e.CardId == entity.CardId)))
+            //if source and newValue count is same and all entities id is same
+            if (source.Count == newValue.Count && source.All(entity => newValue.Any(e => e.CardId == entity.CardId)))
             {
                 return true;
             }
 
-            // 清空 list1 并添加 list2 的内容
-            list1.Clear();
-            list1.AddRange(list2);
+            // 清空 source 并添加 newValue 的内容
+            source.Clear();
+            source.AddRange(newValue);
 
             return false;
         }

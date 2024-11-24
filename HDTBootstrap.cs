@@ -56,6 +56,7 @@ namespace MyHsHelper
         private List<Entity> cardsOnMyBoard = new List<Entity>();
         private List<Entity> cardsInHand = new List<Entity>();
         private List<Entity> cardsInMyControl = new List<Entity>();
+        private Dictionary<string, List<(string locName, CardWikiData cardWikiData)>> relatedCardsDict = new Dictionary<string, List<(string locName, CardWikiData cardWikiData)>>();
 
         /// <summary>
         /// The author, so your name.
@@ -130,8 +131,9 @@ namespace MyHsHelper
         {
             // Card in Bob
             var minionsInBob = new List<Entity>();
-            var bgsInBob = new List<Entity>();
+            var bgSpellInBob = new List<Entity>();
             if (!(Core.Game.Opponent.Hero?.CardId?.Contains("TB_BaconShopBob") ?? false)) return;
+
             var entities = Core.Game.Entities.Values
                 .Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay &&
                             x.IsControlledBy(Core.Game.Opponent.Id))
@@ -139,27 +141,71 @@ namespace MyHsHelper
                 .ToLookup(x => x.IsMinion);
 
             minionsInBob = entities[true].ToList();
-            bgsInBob = entities[false].ToList();
+            bgSpellInBob = entities[false].ToList();
+            // concat minionsInBob and bgSpellInBob
+            var cardsInBob = minionsInBob.Concat(bgSpellInBob).ToList();
+            var cardDataInBob = GetLocNamesAndCardWikiData(cardsInBob);
 
             var tCardsOnMyBoard = Core.Game.Entities.Values
                 .Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay &&
                             x.IsControlledBy(Core.Game.Player.Id)).Select(x => x.Clone())
                 .Select(entity => entity.Clone()).ToList();
-            // Update 
+            // update Card On My Board
             InsMyHsHelper.UpdateListIfSame(cardsOnMyBoard, tCardsOnMyBoard);
 
-            // Card in hand
+            // update Card in hand
             var tCardsInHand = Core.Game.Entities.Values
-                .Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInPlay &&
+                .Where(x => (x.IsMinion || x.IsBattlegroundsSpell) && x.IsInHand &&
                             x.IsControlledBy(Core.Game.Player.Id)).Select(x => x.Clone()).ToList();
             InsMyHsHelper.UpdateListIfSame(cardsInHand, tCardsInHand);
 
             // My Trinkets
             var myTrinkets = Core.Game.Player.Trinkets.Where(trinket => trinket.CardId != null).ToList().ToList();
-
             var tCardsInMyControl = cardsOnMyBoard.Concat(cardsInHand).Where(card => card != null).ToList();
             if (InsMyHsHelper.UpdateListIfSame(cardsInMyControl, tCardsInMyControl)) return;
-            foreach (var card in cardsInMyControl.Where(card => card.CardId != null))
+
+            var cardDataInMyControl = GetLocNamesAndCardWikiData(tCardsInMyControl);
+            // append cardDataInMyControl and bob all tagsList to file. make a separator between cardDataInMyControl and bob tagsList
+            File.AppendAllText("cardDataInMyControl.txt", string.Join("\n", cardDataInMyControl.Select(cd => cd.locName + " " + string.Join(",", cd.cardWikiData.TagsList))));
+            File.AppendAllText("bobTagsList.txt", string.Join("\n", cardDataInBob.Select(cd => string.Join(",", cd.cardWikiData.TagsList))));
+
+            foreach (var cardData in cardDataInMyControl)
+            {
+                if (cardData.cardWikiData.TagsList == null) continue;
+                var relatedTags = new List<string>();
+                foreach (var tag in cardData.cardWikiData.TagsList)
+                {
+                    // if tag ends with "-related", find the related tag
+                    if (tag.EndsWith("-related"))
+                    {
+                        relatedTags.Add(tag.Substring(0, tag.Length - 8));
+                    }
+                    else
+                    {
+                        relatedTags.Add($"{tag}-related");
+                    }
+                }
+                foreach (var cd in cardDataInBob)
+                {
+                    if (cd.cardWikiData.TagsList.Any(tag => relatedTags.Contains(tag)))
+                    {
+                        Console.WriteLine("find:" + cd.locName + " " + string.Join(",", relatedTags));
+                    }
+                }
+            }
+
+            foreach (var cardData in relatedCardsDict)
+            {
+                Console.WriteLine(cardData.Key + " " + string.Join(",", cardData.Value.Select(cd => cd.locName)));
+            }
+        }
+
+
+        public List<(string locName, int EntityId, CardWikiData cardWikiData)> GetLocNamesAndCardWikiData(List<Entity> cards)
+        {
+            var result = new List<(string locName, int EntityId, CardWikiData cardWikiData)>();
+
+            foreach (var card in cards.Where(card => card.CardId != null))
             {
                 if (!(Core.Game.Opponent.Hero?.CardId?.Contains("TB_BaconShopBob") ?? false)) continue;
                 if (card.CardId == null) continue;
@@ -169,19 +215,20 @@ namespace MyHsHelper
                 if (card.CardId.EndsWith("_G"))
                     card.CardId = card.CardId.Substring(0, card.CardId.Length - 2);
                 var locName = dbCard.GetLocName(Locale.zhCN);
-                var tagsList = InsMyHsHelper.FindCardInfo(card.CardId)?.TagsList;
-                if (InsMyHsHelper.FindCardInfo(card.CardId) == null || tagsList == null)
+                var cardWikiData = InsMyHsHelper.FindCardInfo(card.CardId);
+
+                if (cardWikiData != null)
+                {
+                    result.Add((locName, card.Id, cardWikiData));
+                }
+                else
                 {
                     Console.WriteLine(locName + " tagsList is null " + card.CardId);
                     // append to file 
                     File.AppendAllText("null_tagsList.txt", locName + " " + card.CardId + "\n");
                 }
-                else
-                {
-                    Console.WriteLine(locName + " " + string.Join(",", tagsList));
-                }
             }
-            Console.WriteLine("----------------------");
+            return result;
         }
     }
 }
