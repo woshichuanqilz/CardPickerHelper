@@ -64,11 +64,7 @@ namespace MyHsHelper
             InitViewPanel();
             InitLogic();
 
-            GameEvents.OnOpponentCreateInPlay.Add(OnOpponentCreateInPlay);
-            GameEvents.OnOpponentPlayToGraveyard.Add(OnOpponentPlayToGraveyard);
-            GameEvents.OnOpponentGet.Add(OnOpponentGet);
             GameEvents.OnGameEnd.Add(CleanUp);
-            GameEvents.OnOpponentHeroPower.Add(OnOpponentHeroPower);
         }
 
         private void OnOpponentHeroPower()
@@ -239,6 +235,7 @@ namespace MyHsHelper
                     AllKeywordsList = combinedList.Where(item => item.Source == "Keywords").Select(item => item.Item1).Distinct().ToList();
                     AllWikiMechanicsList = combinedList.Where(item => item.Source == "WikiMechanics").Select(item => item.Item1).Distinct().ToList();
                     AllRacesList = combinedList.Where(item => item.Source == "Races").Select(item => item.Item1).Distinct().ToList();
+                    Console.WriteLine("Download done");
 
                     //return await Task.FromResult(new List<CardWikiData>()); // 返回空列表
                 }

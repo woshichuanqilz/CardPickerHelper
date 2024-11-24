@@ -56,7 +56,7 @@ namespace MyHsHelper
         private List<Entity> cardsOnMyBoard = new List<Entity>();
         private List<Entity> cardsInHand = new List<Entity>();
         private List<Entity> cardsInMyControl = new List<Entity>();
-        private Dictionary<string, List<(string locName, CardWikiData cardWikiData)>> relatedCardsDict = new Dictionary<string, List<(string locName, CardWikiData cardWikiData)>>();
+        private Dictionary<int, List<(string myCardLocName, CardWikiData myCardWikiData, string locName, CardWikiData cardWikiData, List<string> MatchedTags)>> relatedCardsDict = new Dictionary<int, List<(string myCardLocName, CardWikiData myCardWikiData, string locName, CardWikiData cardWikiData, List<string> MatchedTags)>>();
 
         /// <summary>
         /// The author, so your name.
@@ -172,31 +172,31 @@ namespace MyHsHelper
             foreach (var cardData in cardDataInMyControl)
             {
                 if (cardData.cardWikiData.TagsList == null) continue;
-                var relatedTags = new List<string>();
-                foreach (var tag in cardData.cardWikiData.TagsList)
+                var relatedTags = cardData.cardWikiData.TagsList.Select(tag => tag.EndsWith("-related") ? tag.Substring(0, tag.Length - 8) : $"{tag}-related").ToList();
+                foreach (var cd in cardDataInBob.Where(cd => cd.cardWikiData.TagsList.Any(tag => relatedTags.Contains(tag))))
                 {
-                    // if tag ends with "-related", find the related tag
-                    if (tag.EndsWith("-related"))
-                    {
-                        relatedTags.Add(tag.Substring(0, tag.Length - 8));
-                    }
-                    else
-                    {
-                        relatedTags.Add($"{tag}-related");
-                    }
-                }
-                foreach (var cd in cardDataInBob)
-                {
+                    // if cd.cardWikiData.TagsList contains any one in relatedTags, add cd to relatedCardsDict
                     if (cd.cardWikiData.TagsList.Any(tag => relatedTags.Contains(tag)))
                     {
-                        Console.WriteLine("find:" + cd.locName + " " + string.Join(",", relatedTags));
+                        var matchedTags = cd.cardWikiData.TagsList.Where(tag => relatedTags.Contains(tag)).ToList();
+                        if (!relatedCardsDict.ContainsKey(cardData.EntityId))
+                        {
+                            relatedCardsDict[cardData.EntityId] = new List<(string myCardLocName, CardWikiData myCardWikiData, string locName, CardWikiData cardWikiData, List<string> MatchedTags)>();
+                        }
+                        relatedCardsDict[cardData.EntityId].Add((cardData.locName, cardData.cardWikiData, cd.locName, cd.cardWikiData, matchedTags));
                     }
                 }
             }
 
+            // console log relatedCardsDict
+            Console.WriteLine("----------------------");
             foreach (var cardData in relatedCardsDict)
             {
-                Console.WriteLine(cardData.Key + " " + string.Join(",", cardData.Value.Select(cd => cd.locName)));
+                Console.WriteLine(cardData.Key + " " + string.Join(",", cardData.Value.Select(cd => cd.myCardLocName + " " + cd.locName)));
+                // tagList
+                Console.WriteLine(string.Join(",", cardData.Value.Select(cd => string.Join(",", cd.myCardWikiData.TagsList))));
+                Console.WriteLine(string.Join(",", cardData.Value.Select(cd => string.Join(",", cd.cardWikiData.TagsList))));
+                Console.WriteLine("----------------------");
             }
         }
 
@@ -214,6 +214,15 @@ namespace MyHsHelper
                 // remove suffix "_G" if exists at the end of cardId
                 if (card.CardId.EndsWith("_G"))
                     card.CardId = card.CardId.Substring(0, card.CardId.Length - 2);
+                if (card.GetTag(GameTag.BACON_TRIPLED_BASE_MINION_ID) != 0)
+                {
+                    //get the base minion by dbfId
+                    var baseMinion = Cards.AllByDbfId[card.GetTag(GameTag.BACON_TRIPLED_BASE_MINION_ID)];
+                    if (baseMinion != null)
+                    {
+                        card.CardId = baseMinion.Id;
+                    }
+                }
                 var locName = dbCard.GetLocName(Locale.zhCN);
                 var cardWikiData = InsMyHsHelper.FindCardInfo(card.CardId);
 
